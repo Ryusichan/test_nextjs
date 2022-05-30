@@ -1,45 +1,25 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
 import Seo from "../components/Seo";
 
 export default function Home({ results }) {
   const router = useRouter();
-  const onClick = (id, title, img) => {
-    router.push(
-      {
-        pathname: `/movies/${id}`,
-        query: {
-          title,
-          img,
-        },
-      },
-      //as 를 이용하여 masks url for the browser
-      `/movies/${id}`
-    );
+  const onClick = (id, title) => {
+    router.push(`/movies/${title}/${id}`);
   };
+
   return (
     <div className="container">
       <Seo title="home" />
       {results?.map((movie) => (
         <div
-          onClick={() =>
-            onClick(movie.id, movie.original_title, movie.poster_path)
-          }
+          onClick={() => onClick(movie.id, movie.original_title)}
           className="movie"
           key={movie.id}
         >
           <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} />
           <h4>
-            <Link
-              href={{
-                pathname: `/movies/${movie.id}`,
-                query: {
-                  title: movie.original_title,
-                },
-              }}
-              as={`/movies/${movie.id}`}
-            >
+            <Link href={`/movies/${movie.original_title}/${movie.id}`}>
               <a>{movie.original_title}</a>
             </Link>
           </h4>
@@ -73,12 +53,14 @@ export default function Home({ results }) {
   );
 }
 
+//server side rendering하는 function
+// react 에서 useEffect 방식으로 api를 받는게 아니라 server에서 읽어진걸 받는 방법이다
+// 이런 방식으로 진행하면 api로 받은 데이터가 html형식으로 되어져 seo에 노출된다.
 export async function getServerSideProps() {
-  const { results } = await (
-    await fetch(
-      `https://api.themoviedb.org/3/movie/popular?api_key=10923b261ba94d897ac6b81148314a3f`
-    )
-  ).json();
+  const { results } = await // await fetch(
+  //   `https://api.themoviedb.org/3/movie/popular?api_key=10923b261ba94d897ac6b81148314a3f`
+  // )
+  (await fetch(`http://localhost:3000/api/movies`)).json();
   return {
     props: {
       results,
